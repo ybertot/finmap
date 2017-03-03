@@ -2928,7 +2928,7 @@ Notation Local "1" := idx.
 
 Notation Local "x * y" := (op x y).
 
-Lemma fset_bigU (I : choiceType) (A B : {fset I}) P F :
+Lemma bigU_fset (I : choiceType) (A B : {fset I}) P F :
   [disjoint A & B] ->
   \big[op/1]_ (i `in A `|` B | P i) F i =
   \big[op/1]_ (i `in A | P i) F i * \big[op/idx]_ (i `in B | P i) F i.
@@ -2953,25 +2953,6 @@ by move=> [k [_ ->]]; apply: valP.
 Qed.
 
 Lemma reindex_fset (I J : choiceType) (h : J -> I) (S1 : {fset I})
-  (S2 : {fset J}) (P : pred I) (F : I -> R) (pS1 : S1) :
-  {in S2, forall x, h x \in S1} ->
-  {on [pred i | P i], bijective (fun x : S2 => h (val x))} ->
-  \big[op/idx]_ (i `in S1 | P i) F i =
-  \big[op/idx]_ (j `in S2 | P (h j)) F (h j).
-Proof.
-move=> inrange bij; rewrite !big_fset.
-rewrite (@reindex R idx op _ [finType of S2]
-             (fun x : S2 => insubd pS1 (h (val x)))).
-  apply eq_big.
-    by move=> [i iins]; rewrite /= val_insubd inrange.
-  by move => [i iins]; rewrite /= val_insubd inrange.
-case:bij => g gK hK.
-exists (fun x => g (val x)).
-  by move=> x; rewrite inE; rewrite !val_insubd inrange //=; apply: gK.
-by move=> x Px; rewrite hK; first by apply: valKd.
-Qed.
-
-Lemma reindex_fset' (I J : choiceType) (h : J -> I) (S1 : {fset I})
   (S2 : {fset J}) (P : pred I) (F : I -> R) (pS1 : S1) :
   h @` S2 = S1 ->  {in [pred i in S2 | P (h i)] &, injective h} ->
   \big[op/idx]_ (i `in S1 | P i) F i =
@@ -3016,6 +2997,25 @@ case: (pickP [pred _ | _]).
 by move=> abs; case: (main _ _ abs); apply/valP.
 Qed.
 
+Lemma reindex_on_fset (I J : choiceType) (h : J -> I) (S1 : {fset I})
+  (S2 : {fset J}) (P : pred I) (F : I -> R) (pS1 : S1) :
+  {in S2, forall x, h x \in S1} ->
+  {on [pred i | P i], bijective (fun x : S2 => h (val x))} ->
+  \big[op/idx]_ (i `in S1 | P i) F i =
+  \big[op/idx]_ (j `in S2 | P (h j)) F (h j).
+Proof.
+move=> inrange bij; rewrite !big_fset.
+rewrite (@reindex R idx op _ [finType of S2]
+             (fun x : S2 => insubd pS1 (h (val x)))).
+  apply eq_big.
+    by move=> [i iins]; rewrite /= val_insubd inrange.
+  by move => [i iins]; rewrite /= val_insubd inrange.
+case:bij => g gK hK.
+exists (fun x => g (val x)).
+  by move=> x; rewrite inE; rewrite !val_insubd inrange //=; apply: gK.
+by move=> x Px; rewrite hK; first by apply: valKd.
+Qed.
+
 Lemma bigD1_fset (I : choiceType) (S : {fset I}) (P : pred I) j F :
   P j -> j \in S ->
   \big[op/1]_(i `in S | P i) F i = F j * \big[op/1]_(i `in S `\ j | P i) F i.
@@ -3028,7 +3028,7 @@ by move => i; rewrite !inE mem_filter andbC.
 Qed.
 
 (* TODO: fix the notation in the RHS when more notations are defined. *)
-Lemma big_fset_filter (I : choiceType) (S : {fset I}) (P : pred I) F :
+Lemma big_filter_fset (I : choiceType) (S : {fset I}) (P : pred I) F :
   \big[op/1]_(i `in S | P i) F i =
   \big[op/1]_(i `in [fset x in S | P x] | true) F i.
 Proof.
