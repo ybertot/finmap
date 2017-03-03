@@ -2903,3 +2903,142 @@ Qed.
 End FsfunIdTheory.
 
 Definition inE := inE.
+
+Notation "\big [ op / idx ]_ ( i '`in' S | P ) F" :=
+  (\big[ op / idx]_ (i <- enum_fset S | P) F)
+    (at level 36, F at level 36, op, idx at level 10, i at level 50,
+     format "'[' \big [ op / idx ]_ ( i  '`in'  S  |  P ) '/  '  F ']'").
+
+Notation "\sum_ ( i '`in' S | P ) F" :=
+  (\sum_ (i <- enum_fset S | P) F)
+    (at level 41, S at level 50, F at level 41, i at level 50,
+     format "'[' \sum_ ( i  '`in'  S  |  P ) '/  '  F ']'").
+
+Section bigop.
+
+Variable R : Type.
+
+Variable idx : R.
+
+Variable op : Monoid.com_law idx.
+
+Notation Local "'*%M'" := op (at level 0).
+
+Notation Local "1" := idx.
+
+Notation Local "x * y" := (op x y).
+
+Lemma fset_bigU (I : choiceType) (A B : {fset I}) P F :
+  [disjoint A & B] ->
+  \big[op/1]_ (i `in A `|` B | P i) F i =
+  \big[op/1]_ (i `in A | P i) F i * \big[op/idx]_ (i `in B | P i) F i.
+Proof.
+move=> dab; set v := LHS.
+rewrite -big_cat; apply/eq_big_perm/uniq_perm_eq.
+    by apply: enum_fset_uniq.
+  rewrite cat_uniq !enum_fset_uniq andbT.
+  by apply/hasPn => x xb /=; apply/(@fdisjointP_sym _ B).
+by move=> i; rewrite !inE mem_cat.
+Qed.
+
+Lemma big_fset (I : choiceType) (S : {fset I}) P F :
+  \big[*%M/1]_(i `in S | P i) F i = \big[*%M/1]_(i : S | P (val i)) F (val i).
+Proof.
+rewrite -[RHS]big_map; apply: eq_big_perm.
+apply: uniq_perm_eq; first by exact: enum_fset_uniq.
+rewrite map_inj_uniq; last by apply:val_inj.
+  by rewrite -[index_enum _]enumT enum_uniq.
+move=> i; apply/idP/mapP; first by move=> iS; exists [` iS].
+by move=> [k [_ ->]]; apply: valP.
+Qed.
+
+Lemma reindex_fset (I J : choiceType) (h : J -> I) (S1 : {fset I})
+  (S2 : {fset J}) (P : pred I) (F : I -> R) (pS1 : S1) :
+  {in S2, forall x, h x \in S1} ->
+  {on [pred i | P i], bijective (fun x : S2 => h (val x))} ->
+  \big[op/idx]_ (i `in S1 | P i) F i =
+  \big[op/idx]_ (j `in S2 | P (h j)) F (h j).
+Proof.
+move=> inrange bij; rewrite !big_fset.
+rewrite (@reindex R idx op _ [finType of S2]
+             (fun x : S2 => insubd pS1 (h (val x)))).
+  apply eq_big.
+    by move=> [i iins]; rewrite /= val_insubd inrange.
+  by move => [i iins]; rewrite /= val_insubd inrange.
+case:bij => g gK hK.
+exists (fun x => g (val x)).
+  by move=> x; rewrite inE; rewrite !val_insubd inrange //=; apply: gK.
+by move=> x Px; rewrite hK; first by apply: valKd.
+Qed.
+
+Lemma reindex_fset' (I J : choiceType) (h : J -> I) (S1 : {fset I})
+  (S2 : {fset J}) (P : pred I) (F : I -> R) (pS1 : S1) :
+  h @` S2 = S1 ->  {in [pred i in S2 | P (h i)] &, injective h} ->
+  \big[op/idx]_ (i `in S1 | P i) F i =
+  \big[op/idx]_ (j `in S2 | P (h j)) F (h j).
+Proof.
+move=> inrange ij; rewrite !big_fset.
+rewrite (@reindex R idx op _ [finType of S2]
+             (fun x : S2 => insubd pS1 (h (val x)))).
+  apply eq_big.
+    move=> [i iins]; rewrite /= val_insubd.
+    by rewrite -[X in _ \in X]inrange in_imfset.
+  move => [i iins]; rewrite /= val_insubd.
+  by rewrite -[X in _ \in X]inrange in_imfset.
+set h' := [ffun x : S2 => h (val x)].
+have main : forall y : I, y \in S1 -> ~((fun x : S2 => h (val x) == y) =1 xpred0).
+  move=> y; rewrite -inrange; move/imfsetP=> [x px1 px2] abs.
+  suff : false by [].
+  by rewrite -(abs [` px1]) /= px2 eqxx.
+set pS2 : S2 := match pickP [pred i : S2 | h (val i) == val pS1] with
+            Pick x _ => x
+          | Nopick h => match main (val pS1) (valP _) h with end
+          end.
+set g : S1 -> S2 := fun x => odflt pS2 (pick [pred j : S2 | h (val j) == val x]).
+exists g.
+  move=> x.
+  have valhx1 : h (val x) \in S1.
+    by rewrite -inrange; apply/imfsetP; exists (val x)=> //=; apply/valP.
+  rewrite /g inE val_insubd valhx1 /=.
+  case: (pickP [pred _ | _]) => /=.
+    move=>y hyx Phx.
+    apply/val_inj/(ij (val y) (val x)).
+        by apply/andP; split;[apply/valP | rewrite (eqP hyx)].
+      by apply/andP;split;[apply/valP | ].
+    by apply/eqP.
+  by move=> abs; case: (main (h (val x))).
+move=> x Px; apply/val_inj.
+have hvalg1 : h (val (g x)) \in S1.
+  by rewrite -inrange; apply/imfsetP; exists (val (g x))=> //=; apply/valP.
+rewrite val_insubd hvalg1 /g.
+case: (pickP [pred _ | _]).
+  by move=>y hy /=; rewrite (eqP hy).
+by move=> abs; case: (main _ _ abs); apply/valP.
+Qed.
+
+Lemma bigD1_fset (I : choiceType) (S : {fset I}) (P : pred I) j F :
+  P j -> j \in S ->
+  \big[op/1]_(i `in S | P i) F i = F j * \big[op/1]_(i `in S `\ j | P i) F i.
+Proof.
+move=>pj js; rewrite !(big_mkcond P) (bigD1_seq j) ?enum_fset_uniq // ?pj.
+congr (_ * _); rewrite -big_filter; apply: eq_big_perm.
+apply: uniq_perm_eq; first by apply/filter_uniq/enum_fset_uniq.
+  by apply: enum_fset_uniq.
+by move => i; rewrite !inE mem_filter andbC.
+Qed.
+
+(* TODO: fix the notation in the RHS when more notations are defined. *)
+Lemma big_fset_filter (I : choiceType) (S : {fset I}) (P : pred I) F :
+  \big[op/1]_(i `in S | P i) F i =
+  \big[op/1]_(i `in [fset x in S | P x] | true) F i.
+Proof.
+Admitted.
+
+Lemma pair_big_dep_fset (I J : choiceType) (S1 : {fset I}) (S2 : {fset J})
+  (P : pred I) (Q : I -> pred J) F :
+  \big[op/1]_(i `in S1 | P i) \big[op/1]_(j `in S2 | Q i j) F i j =
+  \big[op/1]_(p `in S1 `*` S2 | P p.1 && Q p.1 p.2) F p.1 p.2.
+Proof.
+Admitted.
+
+End bigop.
