@@ -3032,13 +3032,34 @@ Lemma big_filter_fset (I : choiceType) (S : {fset I}) (P : pred I) F :
   \big[op/1]_(i `in S | P i) F i =
   \big[op/1]_(i `in [fset x in S | P x] | true) F i.
 Proof.
-Admitted.
+rewrite -big_filter; apply/eq_big_perm/uniq_perm_eq.
+     by apply/filter_uniq/enum_fset_uniq.
+   by apply/enum_fset_uniq.
+by move=> i; rewrite !inE mem_filter andbC.
+Qed.
 
 Lemma pair_big_dep_fset (I J : choiceType) (S1 : {fset I}) (S2 : {fset J})
   (P : pred I) (Q : I -> pred J) F :
   \big[op/1]_(i `in S1 | P i) \big[op/1]_(j `in S2 | Q i j) F i j =
   \big[op/1]_(p `in S1 `*` S2 | P p.1 && Q p.1 p.2) F p.1 p.2.
 Proof.
-Admitted.
+rewrite (eq_bigr (fun i => \big[op/1]_(j : S2 | Q i (val j)) F i (val j)));
+   last by move=> j pj; apply: big_fset.
+rewrite big_fset pair_big_dep.
+rewrite -(big_map (fun p => (val p.1, val p.2)) (fun p => P p.1 && Q p.1 p.2)
+                  (fun p => F p.1 p.2)).
+apply/eq_big_perm/uniq_perm_eq.
+    rewrite map_inj_in_uniq /index_enum -enumT ?enum_uniq //=.
+    move=> [a1 a2] [b1 b2] ap bp [q1 q2].
+    by congr (_ , _); apply/val_inj; rewrite ?q1 ?q2.
+  by apply: enum_fset_uniq.
+move=> [i j]; rewrite !inE /=; case h1 : (i \in S1).
+  case h2 : (j \in S2) => /=.
+    by apply/mapP; exists ([` h1], [` h2]) => //; apply: mem_index_enum.
+  apply/mapP => abs; case:abs => [[x y] [_ [_ yj]]]; case/negP: h2; rewrite yj.
+  by apply/valP.
+apply/mapP => abs; case:abs => [[x y] [_ [xi _]]]; case/negP: h1; rewrite xi.
+by apply/valP.
+Qed.
 
 End bigop.
