@@ -3062,4 +3062,15 @@ apply/mapP => abs; case:abs => [[x y] [_ [xi _]]]; case/negP: h1; rewrite xi.
 by apply/valP.
 Qed.
 
+Lemma pair_big_fset (I J : choiceType) (S1 : {fset I}) (S2 : {fset J})
+  (P : pred I) (Q : pred J) F :
+  \big[op/1]_(i `in S1 | P i) \big[op/1]_(j `in S2 | Q j) F i j =
+  \big[op/1]_(p `in S1 `*` S2 | P p.1 && Q p.2) F p.1 p.2.
+Proof. by apply: pair_big_dep_fset. Qed.
+
+Lemma pair_bigA (I J : choiceType) (S1 : {fset I}) (S2 : {fset J}) F :
+  \big[op/1]_(i `in S1 | true) \big[op/1]_(j `in S2 | true) F i j =
+  \big[op/1]_(p `in S1 `*` S2 | true) F p.1 p.2.
+Proof. by apply: pair_big_dep_fset. Qed.
+
 End bigop.
