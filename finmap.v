@@ -2909,10 +2909,61 @@ Notation "\big [ op / idx ]_ ( i '`in' S | P ) F" :=
     (at level 36, F at level 36, op, idx at level 10, i at level 50,
      format "'[' \big [ op / idx ]_ ( i  '`in'  S  |  P ) '/  '  F ']'").
 
+Notation "\big [ op / idx ]_ ( i '`in' S ) F" :=
+  (\big[ op / idx ]_ (i `in S | true ) F)
+     (at level 36, F at level 36, op, idx at level 10, i at level 50,
+     format "'[' \big [ op / idx ]_ ( i  '`in'  S ) '/  ' F ']'").
+
 Notation "\sum_ ( i '`in' S | P ) F" :=
   (\sum_ (i <- enum_fset S | P) F)
     (at level 41, S at level 50, F at level 41, i at level 50,
      format "'[' \sum_ ( i  '`in'  S  |  P ) '/  '  F ']'").
+
+Notation "\sum_ ( i '`in' S ) F" :=
+  (\sum_ (i <- enum_fset S) F)
+    (at level 41, S at level 50, F at level 41, i at level 50,
+     format "'[' \sum_ ( i  '`in'  S ) '/  '  F ']'").
+
+Notation "\prod_ ( i '`in' S | P ) F" :=
+  (\prod_ (i <- enum_fset S | P) F)
+    (at level 36, S at level 50, F at level 36, i at level 50,
+     format "'[' \prod_ ( i  '`in'  S  |  P ) '/  '  F ']'").
+
+Notation "\prod_ ( i '`in' S ) F" :=
+  (\prod_ (i <- enum_fset S) F)
+    (at level 36, S at level 50, F at level 36, i at level 50,
+     format "'[' \prod_ ( i  '`in'  S ) '/  '  F ']'").
+
+Notation "\bigcup_ ( i '`in' S | P ) F" :=
+  (\bigcup_ (i <- enum_fset S | P) F)
+    (at level 41, S at level 50, F at level 41, i at level 50,
+     format "'[' \bigcup_ ( i  '`in'  S  |  P ) '/  '  F ']'").
+
+Notation "\bigcup_ ( i '`in' S ) F" :=
+  (\bigcup_ (i <- enum_fset S) F)
+    (at level 41, S at level 50, F at level 41, i at level 50,
+     format "'[' \bigcup_ ( i  '`in'  S ) '/  '  F ']'").
+
+Notation "\bigcap_ ( i '`in' S | P ) F" :=
+  (\bigcap_ (i <- enum_fset S | P) F)
+    (at level 41, S at level 50, F at level 41, i at level 50,
+     format "'[' \bigcap_ ( i  '`in'  S  |  P ) '/  '  F ']'").
+
+Notation "\bigcap_ ( i '`in' S ) F" :=
+  (\bigcap_ (i <- enum_fset S) F)
+    (at level 41, S at level 50, F at level 41, i at level 50,
+     format "'[' \bigcap_ ( i  '`in'  S ) '/  '  F ']'").
+
+Notation "\max_ ( i '`in' S | P ) F" :=
+  (\max_ (i <- enum_fset S | P) F)
+    (at level 41, S at level 50, F at level 41, i at level 50,
+     format "'[' \max_ ( i  '`in'  S  |  P ) '/  '  F ']'").
+
+Notation "\max_ ( i '`in' S ) F" :=
+  (\max_ (i <- enum_fset S) F)
+    (at level 41, S at level 50, F at level 41, i at level 50,
+     format "'[' \max_ ( i  '`in'  S ) '/  '  F ']'").
+
 
 Section bigop.
 
@@ -3027,10 +3078,9 @@ apply: uniq_perm_eq; first by apply/filter_uniq/enum_fset_uniq.
 by move => i; rewrite !inE mem_filter andbC.
 Qed.
 
-(* TODO: fix the notation in the RHS when more notations are defined. *)
 Lemma big_filter_fset (I : choiceType) (S : {fset I}) (P : pred I) F :
   \big[op/1]_(i `in S | P i) F i =
-  \big[op/1]_(i `in [fset x in S | P x] | true) F i.
+  \big[op/1]_(i `in [fset x in S | P x]) F i.
 Proof.
 rewrite -big_filter; apply/eq_big_perm/uniq_perm_eq.
      by apply/filter_uniq/enum_fset_uniq.
@@ -3069,8 +3119,8 @@ Lemma pair_big_fset (I J : choiceType) (S1 : {fset I}) (S2 : {fset J})
 Proof. by apply: pair_big_dep_fset. Qed.
 
 Lemma pair_bigA (I J : choiceType) (S1 : {fset I}) (S2 : {fset J}) F :
-  \big[op/1]_(i `in S1 | true) \big[op/1]_(j `in S2 | true) F i j =
-  \big[op/1]_(p `in S1 `*` S2 | true) F p.1 p.2.
+  \big[op/1]_(i `in S1 | true) \big[op/1]_(j `in S2) F i j =
+  \big[op/1]_(p `in S1 `*` S2) F p.1 p.2.
 Proof. by apply: pair_big_dep_fset. Qed.
 
 End bigop.
